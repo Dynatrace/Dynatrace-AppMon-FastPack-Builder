@@ -28,8 +28,6 @@ Accepts the following files & formats:
 Does NOT currently support arbitrary files or session files.
 For more info, see [issues](https://github.com/Dynatrace-Adam-Gardner/FastPack-Builder/issues) for all bugs / enhancement requests.
 
--------------------------
-------- Support ---------
--------------------------
+<h4>Support</h4>
 This tool was coded and developed by Adam Gardner.
 All support requests should be directed to adam.gardner@dynatrace.com
