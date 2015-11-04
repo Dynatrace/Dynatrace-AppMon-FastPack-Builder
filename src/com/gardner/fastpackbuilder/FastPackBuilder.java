@@ -22,6 +22,8 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+// Official Documentation: https://community.dynatrace.com/community/display/DOCDT99/Building+FastPacks
+
 public class FastPackBuilder
 {
 
@@ -163,6 +165,7 @@ public class FastPackBuilder
             else if (oTmpFile.getName().endsWith(".jar")) resource.setAttribute("resource_type","userPlugin"); // TODO - Move to constant.
             else if (oTmpFile.getName().endsWith(".key")) resource.setAttribute("resource_type","licenseFile"); // TODO - Move to constant.
             else if (oTmpFile.isDirectory()) resource.setAttribute("resource_type","sensorPack"); // TODO - Move to constant.
+            else if (oTmpFile.getName().endsWith(".dts")) resource.setAttribute("resource_type","session"); // This is not in the official documentation: https://community.dynatrace.com/community/display/DOCDT99/Building+FastPacks
             //TODO - Additional items (session files, arbitrary files). 
             
             metainfo.appendChild(resource);
