@@ -25,7 +25,7 @@ Accepts the following files & formats:
 - License key files (must end with .key)
 - Sensor Packs (must be the directory containing the plugin.xml file for the sensor pack. Hint: Extract the .dtcs file).
 
-Does NOT currently support arbitrary files or session files.
+Does NOT currently support arbitrary files.
 For more info, see [issues](https://github.com/Dynatrace-Adam-Gardner/FastPack-Builder/issues) for all bugs / enhancement requests.
 
 <h4>Support</h4>
