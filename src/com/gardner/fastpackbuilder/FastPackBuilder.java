@@ -22,6 +22,8 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.gardner.fastpackbuilder.Constants.IConstants;
+
 // Official Documentation: https://community.dynatrace.com/community/display/DOCDT99/Building+FastPacks
 
 public class FastPackBuilder
@@ -29,12 +31,14 @@ public class FastPackBuilder
 
     
     private File m_oInputDir;
+    private File m_oWebDashboardsDir;
     private static String FASTPACK_NAME = ""; // Fastpack name
     private static String FASTPACK_VERSION = ""; // Fastpack version
     
     
     List<File> filesListInDir = new ArrayList<File>();
     List<File> m_oDirList = new ArrayList<File>();
+    
     
     /*
      * List to hold exclusions. These are used to exclude from the plugin.xml file
@@ -57,7 +61,7 @@ public class FastPackBuilder
         m_oExclusions.add("MANIFEST.MF");
         m_oExclusions.add("plugin.xml");
         m_oExclusions.add("META-INF");
-        
+        m_oExclusions.add("webdashboards");
         try
         {
             DOC_BUILDER = DOC_FACTORY.newDocumentBuilder();
@@ -85,7 +89,6 @@ public class FastPackBuilder
             System.out.println("Exception caught populating files list");
         }
         
-        
         // Step 4: Build Plugin XML File
         StringWriter oXMLContent = buildPluginXMLFile();
         
@@ -97,12 +100,9 @@ public class FastPackBuilder
     {
         // Fastpack name with spaces removed & lowercase
         String strBundleName = FASTPACK_NAME.replaceAll("\\s+","").toLowerCase();
-        
 
         String strBundleVersion = FASTPACK_VERSION;
-        //String strBundleVersion = "4.1.0.2599";
         String strImplementationVersion = FASTPACK_VERSION;
-        //String strImplementationVersion = "4.5.0.2599";
         
         Manifest oManifest = new Manifest();
         oManifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0"); //Manifest-Version: 1.0
@@ -124,33 +124,32 @@ public class FastPackBuilder
         StringWriter oWriter = new StringWriter();
         
         // plugin
-        Element rootElement = oPluginXMLDoc.createElement("plugin"); // TODO - Move to constant.
+        Element rootElement = oPluginXMLDoc.createElement("plugin");
         oPluginXMLDoc.appendChild(rootElement);
 
-
         // extension
-        Element extension = oPluginXMLDoc.createElement("extension"); // TODO - Move to constant.
-        extension.setAttribute("id", "Installer Content"); // TODO - Move to constant.
-        extension.setAttribute("point", "com.dynatrace.diagnostics.InstallerContent"); // TODO - Move to constant.
+        Element extension = oPluginXMLDoc.createElement("extension");
+        extension.setAttribute("id", "Installer Content");
+        extension.setAttribute("point", "com.dynatrace.diagnostics.InstallerContent");
         rootElement.appendChild(extension);
 
         // metainfo
         Element metainfo = oPluginXMLDoc.createElement("metainfo");
-        metainfo.setAttribute("installer_type", "resourcepack"); // TODO - Move to constant.
+        metainfo.setAttribute("installer_type", "resourcepack");
         metainfo.setAttribute("name", FASTPACK_NAME);
         extension.appendChild(metainfo);
 
+        // Process web dashboards
+        if (hasWebDashboards()) processWebDashboards(metainfo,oPluginXMLDoc);
+        
         //resources
         for (File oTmpFile : filesListInDir)
         {
             // Ignore any excluded files
-            if (m_oExclusions.contains(oTmpFile.getName()))
-            {
-                continue;
-            }
+            if (m_oExclusions.contains(oTmpFile.getName())) continue;
             
-            Element resource = oPluginXMLDoc.createElement("resource"); // TODO - Move to constant.
-            resource.setAttribute("resource", oTmpFile.getName()); // TODO - Move to constant.
+            Element resource = oPluginXMLDoc.createElement(IConstants.RESOURCE);
+            resource.setAttribute(IConstants.RESOURCE, oTmpFile.getName());
             
             /* Set resource type accordingly
              * dashboards:                      resource_type="dashboard"
@@ -160,12 +159,12 @@ public class FastPackBuilder
              * sensor packs:                    resource_type="sensorPack"
              * TODO v2. arbitrary files
              */
-            if (oTmpFile.getName().endsWith(".dashboard.xml")) resource.setAttribute("resource_type","dashboard"); // TODO - Move to constant.
-            else if (oTmpFile.getName().endsWith(".profile.xml")) resource.setAttribute("resource_type","systemProfile"); // TODO - Move to constant.
-            else if (oTmpFile.getName().endsWith(".jar")) resource.setAttribute("resource_type","userPlugin"); // TODO - Move to constant.
-            else if (oTmpFile.getName().endsWith(".key")) resource.setAttribute("resource_type","licenseFile"); // TODO - Move to constant.
-            else if (oTmpFile.isDirectory()) resource.setAttribute("resource_type","sensorPack"); // TODO - Move to constant.
-            else if (oTmpFile.getName().endsWith(".dts")) resource.setAttribute("resource_type","session"); // This is not in the official documentation: https://community.dynatrace.com/community/display/DOCDT99/Building+FastPacks
+            if (oTmpFile.getName().endsWith(".dashboard.xml")) resource.setAttribute(IConstants.RESOURCE_TYPE,"dashboard");
+            else if (oTmpFile.getName().endsWith(".profile.xml")) resource.setAttribute(IConstants.RESOURCE_TYPE,"systemProfile");
+            else if (oTmpFile.getName().endsWith(".jar")) resource.setAttribute(IConstants.RESOURCE_TYPE,"userPlugin");
+            else if (oTmpFile.getName().endsWith(".key")) resource.setAttribute(IConstants.RESOURCE_TYPE,"licenseFile");
+            else if (oTmpFile.isDirectory()) resource.setAttribute(IConstants.RESOURCE_TYPE,"sensorPack");
+            else if (oTmpFile.getName().endsWith(".dts")) resource.setAttribute(IConstants.RESOURCE_TYPE,"session"); // This is not in the official documentation: https://community.dynatrace.com/community/display/DOCDT99/Building+FastPacks
             //TODO - Additional items (session files, arbitrary files). 
             
             metainfo.appendChild(resource);
@@ -174,14 +173,11 @@ public class FastPackBuilder
         for (File oDir : m_oDirList)
         {
             // Ignore any excluded directories
-            if (m_oExclusions.contains(oDir.getName()))
-            {
-                continue;
-            }
+            if (m_oExclusions.contains(oDir.getName())) continue;
             
-            Element resource = oPluginXMLDoc.createElement("resource"); // TODO - Move to constant.
-            resource.setAttribute("resource", oDir.getName()); // TODO - Move to constant.
-            resource.setAttribute("resource_type","sensorPack");
+            Element resource = oPluginXMLDoc.createElement(IConstants.RESOURCE); // TODO - Move to constant.
+            resource.setAttribute(IConstants.RESOURCE, oDir.getName()); // TODO - Move to constant.
+            resource.setAttribute(IConstants.RESOURCE_TYPE,"sensorPack");
             metainfo.appendChild(resource);
         }
 
@@ -207,8 +203,6 @@ public class FastPackBuilder
         return oWriter;
     }
         
-    
-    
     /**
      * This method zips the directory
      * @param dir
@@ -278,5 +272,63 @@ public class FastPackBuilder
                 populateFilesList(file);
             }
         }
+    }
+    
+    private boolean hasWebDashboards()
+    {
+    	File[] files = m_oInputDir.listFiles();
+    	if (files == null) return false;
+    	
+    	for (File file : files) if (file.isDirectory() && file.getName().equalsIgnoreCase(IConstants.WEB_DASHBOARDS)) return true;
+    	return false;
+    }
+    
+    private Element processWebDashboards(Element metainfo, Document oPluginXMLDoc)
+    {
+    	// Get the web dashboards directory from input dir.
+    	File[] files = m_oInputDir.listFiles();
+    	File oWebDashboardDir = null;
+    	if (files == null) return metainfo;
+    	
+    	for (File file : files) if (file.isDirectory() && file.getName().equalsIgnoreCase(IConstants.WEB_DASHBOARDS)) oWebDashboardDir = file;
+    	
+    	if (oWebDashboardDir == null) return metainfo;
+    	
+    	/* 
+    	 * For each file in IConstants.WEB_DASHBOARDS
+    	 * Build the relevant XML and attach to the metainfo then return the metainfo object.
+    	 */
+    	File[] oWebDashboardFiles = oWebDashboardDir.listFiles();
+        for (File oTmpFile : oWebDashboardFiles)
+        {
+            // Ignore any excluded files
+            if (m_oExclusions.contains(oTmpFile.getName())) continue;
+            
+            Element resource = oPluginXMLDoc.createElement(IConstants.RESOURCE);
+            resource.setAttribute(IConstants.RESOURCE, oTmpFile.getName());
+            
+            /* 
+             * <resource resource="dashboards/web/7b8ed814-49c7-4e62-9f08-d4b57c2ff0dd.xml" resource_type="resource" target_dir="conf/dashboards/web">
+			 *		<instance instance="server"/>
+			 * </resource>
+			 * <resource resource="dashboards/web/7b8ed814-49c7-4e62-9f08-d4b57c2ff0dd.json" resource_type="resource" target_dir="conf/dashboards/web">
+			 *		<instance instance="server"/>
+			 * </resource>
+             */
+            resource.setAttribute(IConstants.RESOURCE,"webdashboards/"+oTmpFile.getName()); //<resource resource="dashboards/web/543dscs.json"....
+            resource.setAttribute(IConstants.RESOURCE_TYPE, IConstants.RESOURCE); // ... resource_type="resource"....
+            resource.setAttribute("target_dir", "conf/dashboards/web"); // ..... target_dir="conf/dahsboards/web"
+            	Element oInstanceElem = oPluginXMLDoc.createElement("instance"); // <instance instance="server" />
+            	oInstanceElem.setAttribute("instance", "server");
+            	resource.appendChild(oInstanceElem);
+            
+            metainfo.appendChild(resource);
+            
+            // We've already written relevant plugin.xml web dashboard stuff
+            // Add to exclusion list to prevent anything else adding a duplicate.
+            m_oExclusions.add(oTmpFile.getName());
+        }
+        
+        return metainfo;
     }
 }
