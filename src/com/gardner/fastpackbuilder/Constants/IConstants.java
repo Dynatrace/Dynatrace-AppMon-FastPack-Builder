@@ -11,5 +11,9 @@ package com.gardner.fastpackbuilder.Constants;
  */
 public interface IConstants
 {
-       
+	public static String PLUGIN = "plugin";
+	public static String EXTENSION = "extension";
+	public static String RESOURCE = "resource";
+	public static String RESOURCE_TYPE = "resource_type";
+	public static String WEB_DASHBOARDS = "webdashboards";
 }
