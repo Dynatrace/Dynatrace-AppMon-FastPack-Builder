@@ -40,7 +40,7 @@ public class FastpackBuilderGUI extends javax.swing.JFrame {
         label_about_info = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Fastpack Builder v1.0");
+        setTitle("Fastpack Builder v1.2");
 
         label_usage_instructions_text.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         label_usage_instructions_text.setText("<html>Place all files in a single folder on your hard drive before using this tool.<br /><br />Your fastpack will be built and placed in the input directory as <i>{FASTPACKNAME}_{VERSION}.jar</i></html>");
@@ -68,7 +68,7 @@ public class FastpackBuilderGUI extends javax.swing.JFrame {
 
         textfield_fastpack_version.setText("1.0");
 
-        label_about_info.setText("Fastpack Builder v1.0 by Adam Gardner (adam.gardner@dynatrace.com)");
+        label_about_info.setText("Fastpack Builder v1.2 by Adam Gardner (adam.gardner@dynatrace.com)");
         label_about_info.setEnabled(false);
 
         javax.swing.GroupLayout panel_about_infoLayout = new javax.swing.GroupLayout(panel_about_info);
